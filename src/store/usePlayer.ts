@@ -1,15 +1,10 @@
 import { create } from "zustand";
+import { Player } from "@/types/player";
 
-type Player = {
-  playerId: string;
-  name: string;
-  chips: number;
-};
-
-type PlayerStore = {
+interface PlayerStore {
   player: Player | null;
   setPlayer: (player: Player) => void;
-};
+}
 
 export const usePlayerStore = create<PlayerStore>((set) => ({
   player: null,
