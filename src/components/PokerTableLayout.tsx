@@ -32,7 +32,6 @@ export function PokerTableLayout({
         <p className="text-white text-sm">Fase: {phase}</p>
       </div>
 
-      {/* Players around the table */}
       {players.map((player, index) => {
         const positions = [
           "top-10 left-1/2 -translate-x-1/2", // top center

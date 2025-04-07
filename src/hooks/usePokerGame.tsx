@@ -13,7 +13,6 @@ export function usePokerGame() {
   const player = usePlayerStore((state) => state.player);
   const setPlayer = usePlayerStore((state) => state.setPlayer);
 
-  // 👇 Aqui é o novo jeito de definir os jogadores
   const players: Player[] = player
     ? [
         { playerId: player.playerId, name: player.name, chips: player.chips },
