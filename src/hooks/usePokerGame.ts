@@ -1,33 +1,34 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { usePokerSocket } from "./usePokerSocket";
 import { usePlayerStore } from "@/store/usePlayer";
+import { PokerPhase } from "@/types/phase";
 import { Player } from "@/types/player";
-
-export type PokerPhase = "pre_flop" | "flop" | "turn" | "river";
+import cable from "@/lib/cable";
 
 export function usePokerGame() {
   const [cards, setCards] = useState<string[]>([]);
   const [communityCards, setCommunityCards] = useState<string[]>([]);
   const [pot, setPot] = useState(0);
   const [phase, setPhase] = useState<PokerPhase>("pre_flop");
+  const [players, setPlayers] = useState<Player[]>([]);
 
   const player = usePlayerStore((state) => state.player);
   const setPlayer = usePlayerStore((state) => state.setPlayer);
 
-  const players: Player[] = player
-    ? [
-        { playerId: player.playerId, name: player.name, chips: player.chips },
-        { playerId: "456", name: "Sr Batatinha", chips: 800 },
-      ]
-    : [];
-
-  useEffect(() => {
-    if (player) {
-      setCards(["AH", "KH"]);
-      setCommunityCards(["QH", "JH", "KS"]);
-      setPot(200);
-      setPhase("flop");
-    }
-  }, [player]);
+  // Inicia o socket apenas se o jogador existir
+  if (player?.name) {
+    usePokerSocket({
+      onStateUpdate: (data) => {
+        setCards(data.cards);
+        setCommunityCards(data.communityCards);
+        setPot(data.pot);
+        setPhase(data.phase);
+        setPlayers(data.players);
+      },
+      playerId: player.playerId,
+      name: player.name,
+    });
+  }
 
   const handleEnterGame = (id: string, name: string) => {
     if (id && name) {
@@ -36,7 +37,12 @@ export function usePokerGame() {
   };
 
   const handleAction = (type: "call" | "raise" | "fold") => {
-    console.log("Ação enviada:", type);
+    const subscription = cable.subscriptions.subscriptions[0];
+    subscription.send({
+      type: "player_action",
+      action: type,
+      playerId: player?.playerId,
+    });
   };
 
   return {
@@ -50,4 +56,6 @@ export function usePokerGame() {
     handleEnterGame,
   };
 }
+
+export type { PokerPhase };
 
