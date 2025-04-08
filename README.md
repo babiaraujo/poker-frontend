@@ -1,5 +1,8 @@
 # Poker Game - Frontend
 
+![image](https://github.com/user-attachments/assets/b4de7280-17f4-4ac5-8943-359c1a27c30b)
+
+
 Este é o frontend do projeto **Texas Hold'em Poker**, desenvolvido em React + TypeScript com comunicação em tempo real com o backend via WebSocket (ActionCable/Rails).
 
 ## Tecnologias Utilizadas
