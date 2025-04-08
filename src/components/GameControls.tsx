@@ -14,6 +14,7 @@ export function GameControls({ onAction }: GameControlsProps) {
       <Button onClick={() => onAction("fold")} variant="destructive">
         Fold
       </Button>
+
     </div>
   );
 }
