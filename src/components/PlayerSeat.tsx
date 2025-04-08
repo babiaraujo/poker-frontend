@@ -1,4 +1,5 @@
 import { Player } from "@/types/player";
+import { cn } from "@/lib/utils";
 
 interface PlayerSeatProps {
   player: Player;
@@ -8,12 +9,14 @@ interface PlayerSeatProps {
 export function PlayerSeat({ player, isCurrent }: PlayerSeatProps) {
   return (
     <div
-      className={`p-3 rounded-xl border-2 text-center min-w-[120px] ${
-        isCurrent ? "bg-yellow-300 text-black border-yellow-500" : "bg-gray-800 border-gray-600"
-      }`}
+      className={cn(
+        "bg-white text-black px-4 py-2 rounded-xl shadow-lg text-center border-2",
+        isCurrent ? "border-yellow-400 font-bold" : "border-gray-300"
+      )}
     >
-      <p className="font-bold">{player.name}</p>
-      <p className="text-sm">{player.chips} fichas</p>
+      <p className="text-sm">{player.name}</p>
+      <p className="text-xs text-gray-700">{player.chips} fichas</p>
+      {isCurrent && <p className="text-xs text-yellow-600 mt-1">Você</p>}
     </div>
   );
 }

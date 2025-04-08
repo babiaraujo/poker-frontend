@@ -1,11 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GameControls } from "@/components/GameControls";
 import { GameTable } from "@/components/GameTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { usePokerGame } from "@/hooks/usePokerGame";
+import {
+  createPlayer,
+  getPlayer,
+  getRooms,
+  joinRoom,
+  startGame,
+} from "@/services/api";
+import { PlayerHistory } from "@/components/PlayerHistory";
 
 export default function Home() {
+  const [inputName, setInputName] = useState("");
+  const [playerId, setPlayerId] = useState<number | null>(null);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [roomId, setRoomId] = useState<number | null>(null);
+  const [gameId, setGameId] = useState<number | null>(null);
+
   const {
     player,
     players,
@@ -15,10 +29,38 @@ export default function Home() {
     phase,
     handleAction,
     handleEnterGame,
-  } = usePokerGame();
+    handleNextPhase,
+    handleFinishGame,
+  } = usePokerGame(gameId || 0, roomId || 0);
 
-  const [inputName, setInputName] = useState("");
-  const [inputId, setInputId] = useState("");
+  useEffect(() => {
+    if (playerId) {
+      getRooms().then(setRooms);
+    }
+  }, [playerId]);
+
+  const handleCreateOrFetchPlayer = async () => {
+    try {
+      if (!isNaN(Number(inputName))) {
+        const fetched = await getPlayer(Number(inputName));
+        setPlayerId(fetched.id);
+      } else {
+        const created = await createPlayer(inputName);
+        setPlayerId(created.id);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar ou criar jogador:", err);
+    }
+  };
+
+  const handleJoinRoom = async (roomId: number) => {
+    if (!playerId) return;
+    await joinRoom(roomId, playerId);
+    const started = await startGame(roomId);
+    setGameId(started.id); 
+    setRoomId(roomId);
+    handleEnterGame(playerId.toString(), inputName);
+  };
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -31,15 +73,24 @@ export default function Home() {
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
             />
-            <Input
-              placeholder="ID do jogador"
-              value={inputId}
-              onChange={(e) => setInputId(e.target.value)}
-            />
-            <Button onClick={() => handleEnterGame(inputId, inputName)}>
-              Entrar na Sala
+            <Button onClick={handleCreateOrFetchPlayer}>
+              Criar / Buscar Jogador
             </Button>
           </div>
+          {rooms.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="font-semibold">Salas Disponíveis:</p>
+              {rooms.map((room) => (
+                <Button
+                  key={room.id}
+                  variant="outline"
+                  onClick={() => handleJoinRoom(room.id)}
+                >
+                  Entrar na Sala: {room.name || room.id}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         <>
@@ -49,11 +100,22 @@ export default function Home() {
             pot={pot}
             communityCards={communityCards}
             players={players}
-            currentPlayerId={player.playerId}
+            currentPlayerId={player.id}
             playerCards={cards}
           />
           <div className="mt-6">
             <GameControls onAction={handleAction} />
+          </div>
+          {playerId && <PlayerHistory id={playerId} />}
+          <div className="mt-4">
+            <Button variant="outline" onClick={handleNextPhase}>
+              Próxima Fase
+            </Button>
+          </div>
+          <div className="mt-2">
+            <Button variant="destructive" onClick={handleFinishGame}>
+              Finalizar Jogo
+            </Button>
           </div>
         </>
       )}
